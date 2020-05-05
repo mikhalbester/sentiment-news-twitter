@@ -3,6 +3,7 @@ import requests
 import json
 import re
 import time
+import pandas as pd
 
 PUSHSHIFT_REDDIT_URL = "http://api.pushshift.io/reddit"
 
@@ -73,3 +74,12 @@ def extract_reddit_data(**kwargs):
 # 1) Subreddit specified
 # 2) The type of data required (comment or submission)
 extract_reddit_data(subreddit="upliftingnews",type="submission")
+
+f = open("submissions.json", "r")
+keys = ['title','created_utc','domain','url','num_comments','over_18','score']
+submissions_list = []
+for line in f:
+
+    submissions_list += [[json.loads(line).get(key) for key in keys]]
+
+pd.DataFrame(submissions_list, columns=keys).to_csv('upliftingnews_submissions.csv')
