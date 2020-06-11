@@ -22,25 +22,27 @@ def fetchObjects(**kwargs):
     # Print API query paramaters
     print(params)
 
-    # Set the type variable based on function input
-    # The type can be "comment" or "submission", default is "comment"
-    type = "comment"
-    if 'type' in kwargs and kwargs['type'].lower() == "submission":
-        type = "submission"
+    # Set the data_type variable based on function input
+    # The data_type can be "comment" or "submission", default is "comment"
+    data_type = "comment"
+    if 'data_type' in kwargs and kwargs['data_type'].lower() == "submission":
+        data_type = "submission"
 
     # Perform an API request
-    r = requests.get(PUSHSHIFT_REDDIT_URL + "/" + type + "/search/", params=params, timeout=30)
+    r = requests.get(PUSHSHIFT_REDDIT_URL + "/" + data_type + "/search/", params=params, timeout=30)
 
     # Check the status code, if successful, process the data
     if r.status_code == 200:
         response = json.loads(r.text)
         data = response['data']
         sorted_data_by_id = sorted(data, key=lambda x: int(x['id'],36))
-        return sorted_data_by_id
+        # Response sometimes returns Nonetype objects, which caused the script to crash
+        if type(sorted_data_by_id) != type(None):
+            return sorted_data_by_id
 
 def extract_reddit_data(**kwargs):
     # Speficify the start timestamp
-    max_created_utc = 1356998400  # 01/01/2013 @ 12:00am (UTC)
+    max_created_utc = 1541228426 #1356998400  # 01/01/2013 @ 12:00am (UTC)
     max_id = 0
 
     # Open a file for JSON output
@@ -72,8 +74,8 @@ def extract_reddit_data(**kwargs):
 
 # Start program by calling function with:
 # 1) Subreddit specified
-# 2) The type of data required (comment or submission)
-extract_reddit_data(subreddit="upliftingnews",type="submission")
+# 2) The data_type of data required (comment or submission)
+extract_reddit_data(subreddit="news",data_type="submission")
 
 f = open("submissions.json", "r")
 keys = ['title','created_utc','domain','url','num_comments','over_18','score']
@@ -82,4 +84,4 @@ for line in f:
 
     submissions_list += [[json.loads(line).get(key) for key in keys]]
 
-pd.DataFrame(submissions_list, columns=keys).to_csv('upliftingnews_submissions.csv')
+pd.DataFrame(submissions_list, columns=keys).to_csv('news_submissions.csv')
